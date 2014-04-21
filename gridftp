@@ -1,0 +1,3 @@
+# Example PAM file
+account required pam_access.so
+account required pam_nologin.so

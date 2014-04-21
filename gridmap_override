@@ -1,0 +1,23 @@
+#
+# If the file /etc/grid-security/gridmap_override exists, lookup
+# this user and if there is a match, use the translated username
+# instead. This is an administrative override for purposes of
+# debugging and user assistance.
+#
+# File Format:
+#  - Blank lines are ignored
+#  - Lines with '#' as the first non space character are comments
+#    and are ignored
+#  - Multiple white spaces are treated as a single white space
+#  - Lines must be < 1024 characters
+#  - All other lines are formatted as either
+#       username1 username2
+#    where username1 is actual username of authenticated user and
+#    username2 is the name the user needs to masquerade as.
+#    -or-
+#       "GSI DN" username2
+#    where "GSI DN" is the GSI DN of the certificate used by the
+#    connecting user and username2 is the name the user needs to
+#    masquerade as. "GSI DN" must be quoted if it contains spaces.
+#
+

@@ -1,0 +1,95 @@
+PURPOSE
+-------
+
+This module allows sites that deploy GSI-related technologies to put the gridmap file
+contents into LDAP for simpler administration in larger environments. Traditionally,
+the gridmap file resides at /etc/grid-security/grid-mapfile. It is used by GSI-enabled
+services (GSISSH, GridFTP, GRAM) to translate a GSI certificate DN to a local user 
+account. In multi node installations, keeping the grid map files in sync can become
+quite tedious and error prone. Placing the translation in LDAP centralizes and simplifies
+administration.
+
+Another feature called gridmap_override is provided to work in conjunction with the
+LDAP capabilities. If the file /etc/grid-security/gridmap_override exists, it is
+used to translate between GSI DN's and local user names for temporary overriding of
+the grid map translations. It is possible to tranlate from a given DN to a local user
+or you may translate from one username to another.
+
+For example, user 'admin' receives a help ticket that user 'bob' is having problems
+with the system through GridFTP. Typically, this results in numerous emails back and
+forth between the admin and end user 'bob' which generally only adds to user frustration
+and dissatisfaction. With the override capability, the admin can make single entry in
+/etc/grid-security/gridmap_override:
+
+admin bob
+
+With the above entry, when the user 'admin' logs into GridFTP, he will be logged in as
+user 'bob'. This gives the admin the capability to diagnose and resolve issues in 
+fashion similar to su. Likewise, the admin could have chosen to translate from his
+GSI DN to user bob instead. The end result is the same:
+
+"/C=US/O=National Center for Supercomputing Applications/CN=Admin User" bob
+
+This module is also capable of hooking into the PAM subsystem for controlling user
+login rights. In typical GSI-related installations, in order to prohibit user login,
+the user's account had to be removed or the DN-to-user translation had to be removed from
+the grid map file. By plugging into PAM, an administrator can make use of traditional
+pam_access and pam_nologin modules to have fine-grain control over user login capabilities.
+This proves to be very useful during maintenance periods when admins need to test interfaces
+but restrict general user access to the system.
+
+Note that the PAM-related functionality is limited to pam_access and pam_nologin. Other
+PAM modules may or may not work.
+
+OVERVIEW
+--------
+This module works by taking advantage the authz callout infrastructure in Globus code that
+is intended for gridmap translations. There are multiple components which need to be placed
+accordingly on the target system:
+
+1) The built library libgridmap_callout.so
+2) The authz callout configuration file gsi-authz.conf
+3) The PAM configuration file 'gridftp'
+4) The override file /etc/grid-security/gridmap_override
+
+
+BUILDING
+--------
+In order to build this module, you must have the ldap-devel, pam-devel and globus-gssapi-gsi-devel
+packages installed in addition to the C compiler and Make utilities.
+
+% make
+
+This should produce the library libgridmap_callout.so.
+
+INSTALLATION
+------------
+The library should be copied somewhere on the system that is generally accessible
+to all GSI services. The simplest installation could put the library into /usr/local/lib64/.
+
+Copy the provided gsi-authz.conf to a location that is generally accessible to the system
+such as /usr/local/etc/.
+
+Copy the provided 'gridftp' file to the PAM configuration directory (/etc/pam.d/ on RHEL).
+
+Copy the provided 'gridmap_override' into /etc/grid-security/gridmap_override.
+
+CONFIGURING
+-----------
+In order for a GSI service like SSH to find the config file gsi-authz.conf, you must set
+the env variable GSI_AUTHZ_CONF to point to the file. For example, if GridFTP is launched
+by xinetd on your system, add this line to GridFTP's configuration in /etc/xinetd.d/
+
+  env += GSI_AUTHZ_CONF=/usr/local/etc/gsi-authz.conf
+
+In order for the GSI authz callouts to find our library, gsi-authz.conf must be modified to
+point to the library. In addition, the file gsi-authz.conf includes comments that allow you
+to decide if you would like LDAP or LDAP+PAM support. You must pick exactly one option.
+
+LDAP must be configured on your system; this is beyond the scope of this document. The library
+expects that the GSI DNs for a specific user are provided by the key 'gridmap' in the user's
+LDAP entry. A user may have more than a single DN listed. If the user does not specify a 
+particular username upon connection (:globus-mapping:), the first DN is used. Otherwise, the
+user is free to specify any of the available DNs listed for that user in LDAP.
+
+Good Luck!
