@@ -92,4 +92,13 @@ LDAP entry. A user may have more than a single DN listed. If the user does not s
 particular username upon connection (:globus-mapping:), the first DN is used. Otherwise, the
 user is free to specify any of the available DNs listed for that user in LDAP.
 
+FOR STRIPED SERVER CONFIGURATIONS:
+Configure the control server (the process that uses the -r option) exactly as described above.
+For the data server (the process that users the -dn option), it is not necessary to set the
+GSI_AUTHZ_CONF environment variable. Instead, you must LD_PRELOAD libgridmap_callout.so so
+that it will make use of the LDAP callouts. You can accomplish this by setting LD_PRELOAD
+in the environment of the GridFTP data server process:
+
+  env += LD_PRELOAD=/usr/local/lib64/libgridmap_callout.so
+
 Good Luck!
