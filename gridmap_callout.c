@@ -1,4 +1,4 @@
-/* $Id: gridmap_callout.c 802 2014-04-21 14:51:46Z jalt $ */
+/* $Id: gridmap_callout.c 813 2014-04-23 16:12:35Z jalt $ */
 /*
  * University of Illinois/NCSA Open Source License
  *
@@ -664,6 +664,7 @@ _LdapLookupWithPam(va_list Ap, int ShouldCheckPam)
 	char *          service          = NULL;
 	char *          desired_identity = NULL;
 	char *          identity_buffer  = NULL;
+	char *          shared_user_cert = NULL;
 	unsigned int    buffer_length    = 0;
 	gss_ctx_id_t    context;
 
@@ -683,10 +684,24 @@ _LdapLookupWithPam(va_list Ap, int ShouldCheckPam)
 	identity_buffer  = va_arg(Ap, char *);
 	buffer_length    = va_arg(Ap, unsigned int);
 
-	/* Get the user's GSI DN from the context. */
-	result = GetContextDn(context, &users_dn);
-	if (result != GLOBUS_SUCCESS)
-		goto cleanup;
+	if (strcmp(service, "sharing") == 0)
+		shared_user_cert = va_arg(Ap, char *);
+
+	if (shared_user_cert)
+	{
+		result = globus_gsi_cred_read_cert_buffer(shared_user_cert,
+		                                          NULL,
+		                                          NULL,
+		                                          NULL,
+		                                          &users_dn);
+		if (result != GLOBUS_SUCCESS)
+			goto cleanup;
+	} else {
+		/* Get the user's GSI DN from the context. */
+		result = GetContextDn(context, &users_dn);
+		if (result != GLOBUS_SUCCESS)
+			goto cleanup;
+	}
 
 	memset(identity_buffer, 0, buffer_length);
 

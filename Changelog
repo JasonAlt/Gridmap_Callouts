@@ -1,3 +1,6 @@
+Version 1.5 (813): Wed Apr 23 11:11:59 CDT 2014
+	- Added support for GO sharing
+
 Version 1.4 (724): Thu Feb  6 19:48:44 CST 2014
 	- Added support for quoted strings in the gridmap override config file
 	- Added support to override mappings for DNs
